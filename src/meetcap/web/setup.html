@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>meetcap setup</title>
+<link rel="icon" href="/favicon.png">
+<style>
+:root {
+  --bg: #f6f5f2; --panel: #ffffff; --panel-2: #f0efeb; --line: #e3e1db; --text: #1d2126; --text-2: #3b4048; --muted: #6a707a;
+  --accent: #c2701c; --accent-soft: #fbeedc; --on-accent: #ffffff; --green: #23845a; --green-soft: #e3f3ea;
+  --red: #cc3b40; --red-soft: #fde8e8; --amber: #a3620a; --amber-soft: #fdf1dc;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171b; --panel: #1c1f24; --panel-2: #252930; --line: #31363f; --text: #ebe9e4; --text-2: #d0cec9; --muted: #9aa0aa;
+    --accent: #f0a45c; --accent-soft: #3a2b1b; --on-accent: #1c1f24; --green: #5fd09a; --green-soft: #173327;
+    --red: #ff7a7e; --red-soft: #3a1d1f; --amber: #f2b45a; --amber-soft: #3a2c14; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 14.5px/1.55 var(--sans); color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+main { max-width: 820px; margin: 0 auto; padding: 32px 20px 140px; display: grid; gap: 18px; }
+header.top { display: flex; gap: 16px; align-items: center; }
+header.top img { width: 84px; height: 84px; }
+header.top h1 { margin: 0; font-size: 26px; letter-spacing: -.02em; }
+header.top p { margin: 4px 0 0; color: var(--text-2); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; }
+.card h2 { margin: 0 0 2px; font-size: 17px; display: flex; gap: 10px; align-items: center; letter-spacing: -.01em; }
+.num { width: 24px; height: 24px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 13px;
+  display: inline-grid; place-items: center; font-weight: 700; flex: none; }
+.lede { margin: 0 0 14px 34px; color: var(--muted); }
+.choices { display: grid; gap: 8px; }
+.choice { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 4px 10px; padding: 11px 13px; border: 1px solid var(--line);
+  border-radius: 10px; cursor: pointer; }
+.choice:hover { background: var(--panel-2); }
+.choice.on { border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: var(--accent-soft); }
+.choice.off { opacity: .55; cursor: not-allowed; }
+.choice input { margin: 4px 0 0; accent-color: var(--accent); }
+.choice b { font-weight: 620; }
+.choice .note { grid-column: 2; color: var(--text-2); font-size: 13px; }
+.badge { font-size: 11px; font-weight: 650; padding: 1px 7px; border-radius: 999px; background: var(--green-soft); color: var(--green);
+  margin-left: 6px; vertical-align: 1px; }
+.fields { display: grid; gap: 12px; margin: 12px 0 2px 32px; }
+.field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+.field .help { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.field .help a { color: var(--accent); }
+.row { display: flex; gap: 8px; }
+input[type=text], input[type=password], input[type=url], select { width: 100%; min-width: 0; padding: 8px 11px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--text); font: 13.5px var(--sans); }
+input.mono { font-family: var(--mono); font-size: 12.5px; }
+input:focus, select:focus { outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 0; border-color: var(--accent); }
+.check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.check input { margin-top: 4px; accent-color: var(--accent); }
+.btn { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px; padding: 7px 14px; font: 600 13.5px var(--sans);
+  cursor: pointer; white-space: nowrap; }
+.btn:hover { background: var(--panel-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn:disabled { opacity: .55; cursor: default; }
+.link { background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; padding: 0; text-decoration: underline; }
+.testrow { display: flex; gap: 12px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+.result { font-size: 13px; }
+.ok { color: var(--green); } .bad { color: var(--red); } .meh { color: var(--muted); }
+.warn { margin: 12px 0 0 32px; padding: 9px 12px; border-radius: 9px; background: var(--amber-soft); color: var(--amber); font-size: 13px; }
+.stack { display: grid; gap: 10px; }
+.log { margin-top: 12px; font: 12.5px/1.6 var(--mono); background: var(--panel-2); border-radius: 9px; padding: 10px 12px; max-height: 260px;
+  overflow: auto; white-space: pre-wrap; }
+.log .p { color: var(--red); } .log .w { color: var(--amber); }
+.pets { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 10px; margin-top: 12px; }
+.pet { border: 1px solid var(--line); border-radius: 12px; padding: 6px 6px 8px; text-align: center; cursor: pointer; background: var(--panel); }
+.pet img { width: 84px; height: 84px; display: block; margin: 0 auto; }
+.pet span { font-size: 12.5px; font-weight: 600; }
+.pet.on { border-color: var(--accent); background: var(--accent-soft); }
+.pet:focus-visible, .btn:focus-visible, .choice:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+footer { position: fixed; left: 0; right: 0; bottom: 0; background: color-mix(in srgb, var(--panel) 92%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-top: 1px solid var(--line); }
+footer .in { max-width: 820px; margin: 0 auto; padding: 12px 20px; display: flex; gap: 12px; align-items: center; }
+footer .msg { flex: 1; font-size: 13px; color: var(--text-2); }
+.problems { margin: 0; padding-left: 18px; color: var(--red); }
+.gone { display: none !important; }
+@media (max-width: 600px) { .fields, .lede, .warn { margin-left: 0; } header.top img { width: 60px; height: 60px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main id="app">
+  <header class="top"><img src="/pet/puppy/sit_r_0.png" alt="" id="hero">
+    <div><h1>Set up meetcap</h1><p>Choose where meetings go and who writes the transcript and notes. You can come back and change anything with <code>meetcap setup</code>.</p></div>
+  </header>
+  <div id="sections"><p class="meh">Loading…</p></div>
+</main>
+<footer><div class="in"><div class="msg" id="msg">Nothing changed yet.</div>
+  <button class="btn" id="save">Save</button><button class="btn primary" id="finish">Save and finish</button></div></footer>
+<script>
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let TOKEN = "";
+try { TOKEN = (location.hash.match(/t=([\w-]+)/) || [])[1] || sessionStorage.getItem("meetcap:setup") || "";
+  if (TOKEN) sessionStorage.setItem("meetcap:setup", TOKEN); history.replaceState(null, "", "/setup"); } catch { /* storage off */ }
+let S = null, cfg = {}, sec = {}, dirty = false;
+
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? { headers: { "X-Meetcap-Token": TOKEN } }
+    : { method: "POST", headers: { "Content-Type": "application/json", "X-Meetcap-Token": TOKEN }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+
+/* ---------- what the page shows (data, not code) ---------- */
+function sections() {
+  const P = S.presets, env = S.env;
+  const key = (s, label = "API key") => ({ t: "secret", s, label, help: P[Object.keys(P).find((k) => P[k].secret === s)]?.signup
+    ? `No key yet? <a href="${esc(P[Object.keys(P).find((k) => P[k].secret === s)].signup)}" target="_blank" rel="noopener">Get one here</a>.` : "" });
+  const model = (k, preset, kind) => ({ t: "text", k, label: "Model", ph: (P[preset] || {})[kind] || "", help: "Leave empty for the default." });
+  return [
+    { id: "storage", title: "Where to keep your meetings", lede: "Recordings, audio, transcripts, notes and screenshots all go here.",
+      key: "storage.backend", test: "storage", options: [
+        { v: "local", label: "A folder on this Mac", badge: "no account", note: "Tip: pick a folder inside OneDrive, Google Drive, Dropbox or iCloud Drive and that app backs your meetings up to the cloud.",
+          fields: [{ t: "folder", k: "storage.local_path", label: "Folder" }] },
+        { v: "azure", label: "Azure Blob Storage", note: "Your own storage account. The notes page then reads straight from Azure, from any Mac.",
+          fields: [
+            { t: "select", k: "azure.storage.auth", label: "Connect with", opts: [["key", "Connection string"], ["sas", "Container SAS URL"], ["aad", "az login (Microsoft Entra ID)"]] },
+            { ...key("storage-connection-string", "Connection string"), when: ["azure.storage.auth", "key"], help: "Azure portal → your storage account → Security + networking → Access keys → Connection string." },
+            { ...key("storage-sas-url", "Container SAS URL"), when: ["azure.storage.auth", "sas"], help: "Needs Read, Add, Create, Write and List permissions." },
+            { t: "text", k: "azure.storage.account_url", label: "Account URL", ph: "https://<account>.blob.core.windows.net", when: ["azure.storage.auth", "aad"] },
+            { t: "text", k: "azure.storage.container", label: "Container", ph: "meetings" },
+            { t: "text", k: "azure.storage.prefix", label: "Folder inside the container (optional)", ph: "your name" }] }] },
+    { id: "transcription", title: "Transcripts", lede: "Turns each recording into text with timestamps.", key: "transcription.engine", test: "transcription",
+      reset: ["transcription.model", "transcription.base_url"], options: [
+        { v: "local", label: "On this Mac (Whisper)", badge: "free · private", disabled: !env.whisper_ok,
+          note: env.whisper_ok ? P.local.free : `Not available here: ${env.whisper_why}.` },
+        { v: "groq", label: "Groq", badge: "free tier", note: P.groq.free.split(";")[0] + ". Audio is sent to Groq.",
+          fields: [key("groq-key"), model("transcription.model", "groq", "stt_model")] },
+        { v: "openrouter", label: "OpenRouter", note: "Pay as you go. One key for Whisper and other speech models.",
+          fields: [key("openrouter-key"), model("transcription.model", "openrouter", "stt_model")] },
+        { v: "openai", label: "OpenAI", note: "Pay as you go. Or any OpenAI-compatible server.",
+          fields: [key("openai-api-key"), model("transcription.model", "openai", "stt_model"),
+            { t: "text", k: "transcription.base_url", label: "Server (optional)", ph: "https://api.openai.com/v1" }] },
+        { v: "azure-openai", label: "Azure OpenAI", note: "A transcription deployment (gpt-4o-transcribe-diarize gives speaker labels).",
+          fields: [{ t: "text", k: "azure.openai.endpoint", label: "Endpoint", ph: "https://<resource>.openai.azure.com" },
+            { t: "text", k: "azure.openai.transcribe_deployment", label: "Deployment", ph: "gpt-4o-transcribe-diarize" }, key("openai-key", "Key")] },
+        { v: "azure-speech", label: "Azure AI Speech", badge: "speaker labels", note: "Tells the voices apart.",
+          fields: [{ t: "text", k: "azure.speech.endpoint", label: "Endpoint", ph: "https://<resource>.cognitiveservices.azure.com" }, key("speech-key", "Key")] },
+        { v: "none", label: "Off", note: "Keep the audio only. You can turn this on later and re-run old meetings." }],
+      extra: [{ t: "list", k: "azure.speech.phrase_list", label: "Names and words your meetings use (optional)", ph: "Priya, Kubernetes, Contoso",
+        help: "Helps every engine spell them right." }] },
+    { id: "summary", title: "Notes", lede: "Summary, action items, decisions and highlights, written from the transcript.", key: "summary.provider", test: "summary",
+      reset: ["summary.model", "summary.base_url"], options: [
+        { v: "none", label: "Off", note: "Transcript and audio only. Everything else still works." },
+        { v: "openrouter", label: "OpenRouter", badge: "free models", note: "openrouter/free picks a free model for you.",
+          fields: [key("openrouter-key"), model("summary.model", "openrouter", "chat_model")],
+          warn: "Free models change without notice, and some of their providers keep what you send. Don't use them for confidential meetings." },
+        { v: "groq", label: "Groq", badge: "free tier", note: "Fast. On the free tier long meetings are summarised in parts, so notes take a few minutes.",
+          fields: [key("groq-key"), model("summary.model", "groq", "chat_model")] },
+        { v: "anthropic", label: "Claude (Anthropic)", note: "Also reads the screenshots. Pay as you go. Claude writes notes; it can't transcribe audio.",
+          fields: [key("anthropic-key"), model("summary.model", "anthropic", "chat_model")] },
+        { v: "openai", label: "OpenAI", note: "Pay as you go. Or any OpenAI-compatible server.",
+          fields: [key("openai-api-key"), model("summary.model", "openai", "chat_model"),
+            { t: "text", k: "summary.base_url", label: "Server (optional)", ph: "https://api.openai.com/v1" }] },
+        { v: "azure-openai", label: "Azure OpenAI", note: "A chat deployment such as gpt-4.1.",
+          fields: [{ t: "text", k: "azure.openai.endpoint", label: "Endpoint", ph: "https://<resource>.openai.azure.com" },
+            { t: "text", k: "azure.openai.deployment", label: "Deployment", ph: "gpt-4.1" }, key("openai-key", "Key")] },
+        { v: "ollama", label: "Ollama (on this Mac)", badge: "free · private", note: P.ollama.free,
+          fields: [model("summary.model", "ollama", "chat_model"), { t: "text", k: "summary.base_url", label: "Server (optional)", ph: "http://127.0.0.1:11434/v1" }] }],
+      extra: [{ t: "check", k: "summary.screenshots", label: "Send screenshots too, when the model can read images" }] },
+    { id: "recording", title: "Recording", lede: "Meetings in Teams, Zoom and Webex are picked up by themselves.", fields: [
+      { t: "check", k: "detection.enabled", label: "Record meetings automatically" },
+      { t: "check", k: "recording.video", label: "Record the screen too (so you can replay what was shared)" },
+      { t: "check", k: "ui.open_notes_after_meeting", label: "Open the notes in my browser when they're ready" },
+      { t: "text", k: "processing.user_name", label: "Your first name", ph: "helps the notes say which action items are yours" }] },
+  ];
+}
+
+/* ---------- drawing ---------- */
+const val = (k) => cfg[k];
+function fieldHtml(f) {
+  if (f.when && val(f.when[0]) !== f.when[1]) return "";
+  const help = f.help ? `<div class="help">${f.help}</div>` : "";
+  if (f.t === "check") return `<label class="check"><input type="checkbox" data-k="${f.k}" ${val(f.k) ? "checked" : ""}><span>${esc(f.label)}</span></label>`;
+  if (f.t === "select") return `<div class="field"><label>${esc(f.label)}</label><select data-k="${f.k}">${f.opts.map(([v, l]) =>
+    `<option value="${v}" ${val(f.k) === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>${help}</div>`;
+  if (f.t === "secret") {
+    const have = S.secrets[f.s], typed = typeof sec[f.s] === "string" ? sec[f.s] : "";
+    const state = sec[f.s] === false ? `<span class="bad">will be removed</span>` : have ? `<span class="ok">saved in your Keychain</span> · <button class="link" data-remove="${f.s}">remove</button>` : "";
+    return `<div class="field"><label>${esc(f.label)} ${state ? "· " + state : ""}</label><input type="password" class="mono" data-s="${f.s}" value="${esc(typed)}"
+      autocomplete="off" spellcheck="false" placeholder="${have ? "leave empty to keep the saved one" : "paste it here"}">${help}</div>`;
+  }
+  if (f.t === "folder") return `<div class="field"><label>${esc(f.label)}</label><div class="row"><input type="text" data-k="${f.k}" value="${esc(val(f.k))}">
+    <button class="btn" data-choose="${f.k}">Choose…</button></div>${help}</div>`;
+  const v = f.t === "list" ? (val(f.k) || []).join(", ") : val(f.k);
+  return `<div class="field"><label>${esc(f.label)}</label><input type="text" data-k="${f.k}" ${f.t === "list" ? 'data-list="1"' : ""} value="${esc(v)}" placeholder="${esc(f.ph || "")}">${help}</div>`;
+}
+function sectionHtml(sct, n) {
+  let h = `<section class="card" id="sec-${sct.id}"><h2><span class="num">${n}</span>${esc(sct.title)}</h2><p class="lede">${esc(sct.lede || "")}</p>`;
+  if (sct.options) {
+    h += `<div class="choices">`;
+    for (const o of sct.options) {
+      const on = val(sct.key) === o.v;
+      h += `<label class="choice ${on ? "on" : ""} ${o.disabled ? "off" : ""}"><input type="radio" name="${sct.id}" value="${o.v}" data-choice="${sct.key}" ${on ? "checked" : ""} ${o.disabled ? "disabled" : ""}>
+        <span><b>${esc(o.label)}</b>${o.badge ? `<span class="badge">${esc(o.badge)}</span>` : ""}</span>${o.note ? `<span class="note">${esc(o.note)}</span>` : ""}</label>`;
+      if (on && (o.fields || []).length) h += `<div class="fields">${o.fields.map(fieldHtml).join("")}</div>`;
+      if (on && o.warn) h += `<div class="warn">${esc(o.warn)}</div>`;
+    }
+    h += `</div>`;
+  }
+  const extra = [...(sct.fields || []), ...(sct.extra || [])];
+  if (extra.length) h += `<div class="fields" style="margin-left:0;margin-top:16px">${extra.map(fieldHtml).join("")}</div>`;
+  if (sct.test) h += `<div class="testrow"><button class="btn" data-test="${sct.test}">Save and test</button><span class="result" id="res-${sct.test}"></span></div>`;
+  return h + `</section>`;
+}
+function obsHtml(n) {
+  const env = S.env, o = S.obs;
+  const lines = (o.steps || []).map((x) => x.startsWith("PROBLEM: ") ? `<div class="p">✗ ${esc(x.slice(9))}</div>` : x.startsWith("WARNING: ")
+    ? `<div class="w">! ${esc(x.slice(9))}</div>` : `<div>✓ ${esc(x)}</div>`).join("");
+  const status = !env.obs_installed ? `<span class="bad">OBS isn't installed. Run ./install.sh, or get it from obsproject.com.</span>`
+    : o.running ? `<span class="meh">Setting up… OBS opens and closes a few times. Click Allow on the macOS prompts.</span>`
+    : o.error ? `<span class="bad">Stopped: ${esc(o.error)}</span>` : o.done ? `<span class="ok">OBS is ready.</span>`
+    : env.obs_set_up ? `<span class="ok">Set up before. Run it again after an OBS update or if recordings look wrong.</span>` : `<span class="meh">Not set up yet.</span>`;
+  return `<section class="card" id="sec-obs"><h2><span class="num">${n}</span>OBS (the recorder)</h2>
+    <p class="lede">meetcap uses the free OBS app to capture your screen, microphone and the meeting's audio. This sets it up for you.</p>
+    <div class="testrow" style="margin-left:34px;margin-top:0"><button class="btn" id="obs" ${!env.obs_installed || o.running ? "disabled" : ""}>${env.obs_set_up || o.done ? "Set up OBS again" : "Set up OBS"}</button>${status}</div>
+    ${lines ? `<div class="log" id="obslog">${lines}</div>` : ""}</section>`;
+}
+function petHtml(n) {
+  return `<section class="card" id="sec-pet"><h2><span class="num">${n}</span>Desktop pet</h2>
+    <p class="lede">A little companion that walks along the bottom of your screen. It shows what meetcap is doing, and double-clicking it starts or stops a recording.</p>
+    <div class="fields" style="margin-left:34px;margin-top:0">${fieldHtml({ t: "check", k: "ui.pet", label: "Show a pet on my screen" })}</div>
+    <div class="pets" role="radiogroup" aria-label="Pick a pet">${S.species.map((sp) => `<div class="pet ${val("ui.pet_species") === sp.id ? "on" : ""}" tabindex="0" role="radio"
+      aria-checked="${val("ui.pet_species") === sp.id}" data-pet="${sp.id}"><img src="/pet/${sp.id}/sit_r_0.png" alt=""><span>${esc(sp.label)}</span></div>`).join("")}</div></section>`;
+}
+function render() {
+  const list = sections();
+  let n = 0;
+  $("#sections").innerHTML = list.map((s) => sectionHtml(s, ++n)).join("") + obsHtml(++n) + petHtml(++n);
+  $("#sections").className = "stack";
+  $("#hero").src = `/pet/${val("ui.pet_species") || "puppy"}/sit_r_0.png`;
+  wire();
+}
+function footer(text, cls = "") { $("#msg").innerHTML = cls ? `<span class="${cls}">${text}</span>` : text; }
+function showProblems() {
+  if (S.problems.length) footer(`<ul class="problems">${S.problems.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`);
+  else {
+    const missing = S.needed.filter((s) => !S.secrets[s]);
+    footer(missing.length ? `<span class="bad">Still needs: ${missing.map(esc).join(", ")}.</span>`
+      : `<span class="ok">Saved.</span> Storage: ${esc(S.describe.storage)} · Transcripts: ${esc(S.describe.transcription)} · Notes: ${esc(S.describe.notes)}`);
+  }
+}
+
+/* ---------- editing ---------- */
+function wire() {
+  $$("[data-choice]").forEach((r) => r.addEventListener("change", () => {
+    const sct = sections().find((x) => x.key === r.dataset.choice);
+    cfg[r.dataset.choice] = r.value; for (const k of sct.reset || []) cfg[k] = "";
+    touch(); render();
+  }));
+  $$("input[data-k], select[data-k]").forEach((el) => el.addEventListener(el.type === "checkbox" || el.tagName === "SELECT" ? "change" : "input", () => {
+    cfg[el.dataset.k] = el.type === "checkbox" ? el.checked : el.dataset.list ? el.value.split(",").map((x) => x.trim()).filter(Boolean) : el.value;
+    touch(); if (el.tagName === "SELECT") render();
+  }));
+  $$("input[data-s]").forEach((el) => el.addEventListener("input", () => { sec[el.dataset.s] = el.value;
+    $$(`input[data-s="${el.dataset.s}"]`).forEach((o) => { if (o !== el) o.value = el.value; }); touch(); }));
+  $$("[data-remove]").forEach((b) => b.addEventListener("click", (e) => { e.preventDefault(); sec[b.dataset.remove] = false; touch(); render(); }));
+  $$("[data-choose]").forEach((b) => b.addEventListener("click", async () => {
+    try { const r = await api("/api/choose-folder", {}); if (r.path) { cfg[b.dataset.choose] = r.path; touch(); render(); } } catch (e) { footer(esc(e.message), "bad"); } }));
+  $$("[data-test]").forEach((b) => b.addEventListener("click", () => test(b.dataset.test, b)));
+  $$("[data-pet]").forEach((el) => { const pick = () => { cfg["ui.pet_species"] = el.dataset.pet; touch(); render(); };
+    el.addEventListener("click", pick); el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } }); });
+  const obs = $("#obs"); if (obs) obs.addEventListener("click", startObs);
+}
+function touch() { dirty = true; footer("You have unsaved changes."); }
+async function save() {
+  const out = await api("/api/save", { config: cfg, secrets: sec });
+  S = out; cfg = { ...S.config }; sec = {}; dirty = false; render(); showProblems(); return out;
+}
+async function test(what, btn) {
+  const res = $(`#res-${what}`); btn.disabled = true; res.className = "result meh"; res.textContent = "Saving and testing…";
+  try { await save(); const r = await api("/api/test", { what });
+    const out = $(`#res-${what}`); out.className = "result " + (r.ok ? "ok" : r.ok === false ? "bad" : "meh"); out.textContent = (r.ok ? "✓ " : r.ok === false ? "✗ " : "") + r.message; }
+  catch (e) { const out = $(`#res-${what}`); out.className = "result bad"; out.textContent = "✗ " + e.message; }
+}
+async function startObs() {
+  try { await save(); S.obs = await api("/api/obs", {}); render(); pollObs(); } catch (e) { footer(esc(e.message), "bad"); }
+}
+async function pollObs() {
+  try { S.obs = await api("/api/obs"); } catch { return; }
+  const keep = $("#obslog") ? $("#obslog").scrollTop : 0; render(); const l = $("#obslog"); if (l) l.scrollTop = S.obs.running ? l.scrollHeight : keep;
+  if (S.obs.running) setTimeout(pollObs, 1000); else if (S.obs.done) { S.env.obs_set_up = true; render(); }
+}
+$("#save").addEventListener("click", async () => { try { await save(); } catch (e) { footer(esc(e.message), "bad"); } });
+$("#finish").addEventListener("click", async () => {
+  const b = $("#finish"); b.disabled = true;
+  try { await save(); const r = await api("/api/finish", {});
+    const said = r.restarted ? r.restarted[0].toUpperCase() + r.restarted.slice(1) : "";
+    footer(`<span class="ok">All set.</span> ${esc(said)}.${r.reader ? " Your notes page opened in a new tab; bookmark it." : ""} You can close this tab.`);
+  } catch (e) { footer(esc(e.message), "bad"); b.disabled = false; }
+});
+window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+(async function init() {
+  if (!TOKEN) { $("#sections").innerHTML = `<div class="card">Open this page by running <code>meetcap setup</code> in Terminal.</div>`; return; }
+  try { S = await api("/api/state"); cfg = { ...S.config }; render(); showProblems(); if (S.obs.running) pollObs(); }
+  catch (e) { $("#sections").innerHTML = `<div class="card bad">${esc(e.message)}</div>`; }
+})();
+</script>
+</body>
+</html>

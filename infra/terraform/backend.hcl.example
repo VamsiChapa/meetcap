@@ -1,0 +1,8 @@
+# terraform init -backend-config=backend.hcl
+# Point at an existing team state account. For a personal trial, delete backend.tf instead and run
+# plain `terraform init` (state then lives locally in terraform.tfstate).
+resource_group_name  = "rg-tfstate"
+storage_account_name = "sttfstateyourorg"
+container_name       = "tfstate"
+key                  = "meetcap/yourname.tfstate"
+use_azuread_auth     = true

@@ -1,0 +1,16 @@
+__pycache__/
+*.egg-info/
+build/
+.pytest_cache/
+tests/.tmp_home/
+infra/terraform/.terraform/
+infra/terraform/*.tfstate*
+infra/terraform/terraform.tfvars
+infra/terraform/backend.hcl
+.ruff_cache/
+.DS_Store
+.venv/
+tools/pets_quick.png
+src/*.egg-info/
+*.plan
+infra/terraform/tf.plan

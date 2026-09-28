@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meetcap"
+version = "0.8.0"
+description = "Records your meetings on macOS, then gives you a transcript, notes and a searchable reader. Local-first; bring your own AI provider."
+requires-python = ">=3.10"
+authors = [{ name = "Vamsi Chapa" }]
+license = { text = "MIT" }
+readme = "README.md"
+dependencies = [
+  "pyyaml>=6.0",
+  "ruamel.yaml>=0.18",
+  "requests>=2.31",
+  "websocket-client>=1.7",
+  "azure-storage-blob>=12.19",
+  "azure-identity>=1.17",
+  "openai>=1.106",
+  "keyring>=25.0",
+]
+
+[project.optional-dependencies]
+ui = ["rumps>=0.4.0"]
+local = ["mlx-whisper>=0.4; platform_machine == 'arm64' and sys_platform == 'darwin'"]
+dev = ["pytest>=8.0"]
+
+[project.urls]
+Homepage = "https://github.com/VamsiChapa/meetcap"
+Issues = "https://github.com/VamsiChapa/meetcap/issues"
+
+[project.scripts]
+meetcap = "meetcap.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+meetcap = ["prompts/*.md", "config.example.yaml", "icons/*.png", "pet/*.png", "pet/*/*.png", "web/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 140
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]

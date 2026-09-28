@@ -1,0 +1,9 @@
+subscription_id      = "00000000-0000-0000-0000-000000000000"
+location             = "eastus2"
+resource_group_name  = "rg-meetcap-yourname"
+storage_account_name = "stmeetcapyourname01"
+speech_name          = "speech-meetcap-yourname"
+delete_after_days    = 365
+# allowed_ip_ranges  = ["203.0.113.10"]
+# create_openai      = true
+# openai_name        = "aoai-meetcap-yourname"

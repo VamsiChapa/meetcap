@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meeting notes</title>
+<link rel="icon" href="/favicon.png">
+<style>
+:root {
+  --bg: #f6f5f2; --panel: #ffffff; --panel-2: #f0efeb; --line: #e3e1db; --text: #1d2126; --text-2: #33383f; --muted: #6a707a;
+  --accent: #c2701c; --accent-soft: #fbeedc; --blue: #2b62c6; --blue-soft: #e7eefb; --red: #d63c41; --red-soft: #fde8e8;
+  --mark: #ffe27a; --shadow: 0 1px 2px rgba(20, 20, 20, .06);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+  --serif: "Iowan Old Style", Charter, "New York", Georgia, "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --fs: 17px; --measure: 70ch; --read-font: var(--sans); --on-accent: #ffffff;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171b; --panel: #1c1f24; --panel-2: #252930; --line: #31363f; --text: #ebe9e4; --text-2: #d6d4cf; --muted: #9aa0aa;
+    --accent: #f0a45c; --accent-soft: #3a2b1b; --blue: #8ab2ff; --blue-soft: #1f2a40; --red: #ff6b6f; --red-soft: #3a1d1f;
+    --mark: #6d5b14; --shadow: 0 1px 2px rgba(0, 0, 0, .4); --on-accent: #1c1f24; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15171b; --panel: #1c1f24; --panel-2: #252930; --line: #31363f; --text: #ebe9e4; --text-2: #d6d4cf; --muted: #9aa0aa;
+  --accent: #f0a45c; --accent-soft: #3a2b1b; --blue: #8ab2ff; --blue-soft: #1f2a40; --red: #ff6b6f; --red-soft: #3a1d1f;
+  --mark: #6d5b14; --shadow: 0 1px 2px rgba(0, 0, 0, .4); --on-accent: #1c1f24; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { font: 14px/1.5 var(--sans); color: var(--text); background: var(--bg); display: grid;
+  grid-template-rows: 54px minmax(0, 1fr); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#detail:focus-visible { outline: none; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+mark { background: var(--mark); color: inherit; border-radius: 3px; padding: 0 1px; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.grow { flex: 1; }
+.btn { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px; padding: 5px 11px;
+  font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.btn:hover { background: var(--panel-2); }
+.btn.on { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 40%, transparent); color: var(--accent); }
+kbd { font: 11px var(--mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; }
+.err { background: var(--red-soft); color: var(--red); padding: 8px 12px; border-radius: 8px; margin: 10px 12px; font-size: 12.5px; }
+.err.inline { margin: 0; padding: 3px 8px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.btn:disabled { opacity: .6; cursor: default; }
+code { font: 12.5px var(--mono); background: var(--panel-2); padding: 1px 5px; border-radius: 5px; }
+
+/* ---- top bar ---- */
+header { display: flex; align-items: center; gap: 10px; padding: 0 14px; background: var(--panel);
+  border-bottom: 1px solid var(--line); position: relative; }
+header img.pup { width: 38px; height: 38px; flex: none; }
+header h1 { font-size: 15px; margin: 0; font-weight: 650; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; min-width: 0;
+  background: var(--panel-2); color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; }
+.pill .dot { flex: none; }
+.pill.rec { background: var(--red-soft); color: var(--red); }
+.pill .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.pill.rec .dot { animation: pulse 1.2s infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+
+/* reading settings popover */
+.pop { position: absolute; right: 14px; top: 50px; z-index: 30; width: 300px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; box-shadow: 0 12px 32px rgba(0, 0, 0, .16); padding: 12px 14px; display: none; }
+.pop.open { display: block; }
+.pop .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; }
+.pop hr { border: 0; border-top: 1px solid var(--line); margin: 12px 0 8px; }
+.pop .keys { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 12px; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: none; padding: 4px 10px; font-size: 12.5px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.seg button:disabled { cursor: default; min-width: 38px; font-variant-numeric: tabular-nums; }
+
+/* ---- layout ---- */
+main { display: grid; grid-template-columns: minmax(280px, 350px) minmax(0, 1fr); min-height: 0; }
+body.focus main { grid-template-columns: minmax(0, 1fr); }
+body.focus aside { display: none; }
+aside { border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; background: var(--panel); }
+.search { padding: 12px; border-bottom: 1px solid var(--line); }
+.search input { width: 100%; padding: 9px 12px 9px 34px; border-radius: 9px; border: 1px solid var(--line);
+  background: var(--panel-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23889' stroke-width='2'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cpath d='M11 11l4 4'/%3E%3C/svg%3E") no-repeat 11px 50%;
+  color: var(--text); font: inherit; outline: none; }
+.search input:focus { border-color: var(--accent); background-color: var(--panel); }
+.search .hint { margin-top: 6px; }
+.list { overflow-y: auto; flex: 1; padding: 4px 0 20px; }
+.day { position: sticky; top: 0; background: var(--panel); padding: 10px 16px 4px; font-size: 11px; font-weight: 650;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--muted); z-index: 1; }
+.item { padding: 10px 14px; margin: 2px 8px; border-radius: 9px; cursor: pointer; border: 1px solid transparent; }
+.item:hover { background: var(--panel-2); }
+.item.sel { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.item .t { font-weight: 600; margin-bottom: 2px; }
+.item .meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.item .sum { font-size: 12.5px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; margin-top: 3px; }
+.tag { font-size: 11px; padding: 0 7px; border-radius: 999px; background: var(--panel-2); color: var(--muted); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); }
+.tag.orange { background: var(--accent-soft); color: var(--accent); }
+.item.proc { opacity: .85; cursor: default; }
+.spin { display: inline-block; width: 10px; height: 10px; border: 2px solid var(--muted); border-right-color: transparent;
+  border-radius: 50%; animation: spin 1s linear infinite; vertical-align: -1px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- reader ---- */
+#detail { overflow-y: auto; min-height: 0; container-type: inline-size; outline: none; }
+.bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 20px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: saturate(1.4) blur(8px);
+  -webkit-backdrop-filter: saturate(1.4) blur(8px); border-bottom: 1px solid var(--line); }
+.tabs { display: inline-flex; gap: 2px; background: var(--panel-2); padding: 3px; border-radius: 9px; }
+.tabs button { border: 0; background: none; padding: 4px 12px; border-radius: 7px; font-size: 13px; color: var(--muted); font-weight: 550; }
+.tabs button.on { background: var(--panel); color: var(--text); box-shadow: var(--shadow); }
+.tabs .n { font-size: 11px; color: var(--muted); margin-left: 5px; font-variant-numeric: tabular-nums; }
+.bar audio { height: 32px; width: min(360px, 36cqw); }
+.bar .follow { display: none; align-items: center; gap: 4px; }
+#detail[data-tab="transcript"] .bar .follow { display: inline-flex; }
+
+.page { display: grid; grid-template-columns: minmax(0, var(--measure)) 190px; justify-content: center; gap: 56px;
+  padding: 40px 28px 140px; font-size: var(--fs); font-family: var(--read-font); }
+@container (max-width: 1020px) { .page { grid-template-columns: minmax(0, var(--measure)); } .toc { display: none; } }
+@container (max-width: 560px) { .page { padding: 24px 16px 100px; } }
+
+.doc { min-width: 0; line-height: 1.68; color: var(--text-2); }
+.doc h1 { font: 700 1.85em/1.18 var(--sans); letter-spacing: -.022em; color: var(--text); margin: 0 0 .45em; text-wrap: balance; }
+.byline { font: 13.5px/1.5 var(--sans); color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 14px; }
+.lead { font-size: 1.15em; line-height: 1.62; color: var(--text); margin: 1.3em 0 0; text-wrap: pretty; }
+.doc h2 { font: 680 1.14em/1.3 var(--sans); letter-spacing: -.01em; color: var(--text); margin: 2.3em 0 .7em;
+  padding-bottom: .4em; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; gap: 8px; scroll-margin-top: 72px; }
+.doc h2 .n { font: 500 12px var(--sans); color: var(--muted); font-variant-numeric: tabular-nums; }
+.doc p { margin: 0; }
+ul.bul { margin: 0; padding-left: 1.25em; }
+ul.bul li { margin: .5em 0; padding-left: .2em; text-wrap: pretty; }
+ul.bul li::marker { color: var(--muted); }
+ul.moments, ul.check { list-style: none; margin: 0; padding: 0; }
+ul.moments li { display: grid; grid-template-columns: 5.4em minmax(0, 1fr); gap: .9em; padding: .55em 0; align-items: baseline;
+  border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+ul.moments li:first-child, ul.check li:first-child { border-top: 0; }
+ul.check li { display: grid; grid-template-columns: 1.5em minmax(0, 1fr); gap: .55em; padding: .6em 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+ul.check input { width: 1.05em; height: 1.05em; margin: .32em 0 0; accent-color: var(--accent); cursor: pointer; }
+ul.check .owner { font-weight: 650; color: var(--text); }
+ul.check .meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: .2em; font: 12.5px var(--sans); color: var(--muted); }
+ul.check .due { color: var(--accent); font-weight: 600; }
+ul.check li.done .task { text-decoration: line-through; color: var(--muted); }
+.ts { font: 500 12px/1.7 var(--mono); padding: 0 .55em; border-radius: 6px; background: var(--blue-soft); color: var(--blue);
+  border: 0; white-space: nowrap; display: inline-block; }
+button.ts:hover { text-decoration: underline; }
+img.thumb { display: block; margin-top: .55em; max-width: min(340px, 100%); border: 1px solid var(--line); border-radius: 8px; cursor: zoom-in; }
+
+.turn { display: grid; grid-template-columns: 5.4em minmax(0, 1fr); gap: .9em; margin: 0 0 1.2em; }
+.turn .gut { padding-top: .12em; }
+.turn .who { font: 650 13px/1.4 var(--sans); margin-bottom: .15em; }
+.ph { border-radius: 3px; transition: background-color .2s; }
+.ph:hover { background: var(--panel-2); cursor: pointer; }
+.ph.now { background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-soft); color: var(--text); }
+
+.vid { margin: 1.4em 0 .4em; background: #000; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+.vid video { display: block; width: 100%; max-height: 72vh; background: #000; }
+#detail[data-tab="video"] .page { grid-template-columns: minmax(0, 1100px); }
+#detail[data-tab="video"] .toc, #detail[data-tab="video"] .bar audio { display: none; }
+body.setup aside, body.setup #sync, body.setup #focus, body.setup #synced { display: none; }
+body.setup main { grid-template-columns: minmax(0, 1fr); }
+.setupbox { max-width: 600px; margin: 8vh auto 40px; padding: 0 16px; text-align: center; }
+.setupbox img { width: 120px; height: 120px; }
+.setupbox h2 { font-size: 22px; margin: 6px 0 8px; letter-spacing: -.01em; }
+.setupbox p { color: var(--text-2); }
+.setupbox form { display: flex; gap: 8px; margin: 18px 0 10px; }
+.setupbox input { flex: 1; min-width: 0; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--text); font: 13px var(--mono); }
+.setupbox input:focus { border-color: var(--accent); outline: none; }
+.setupbox .err { margin: 8px 0; text-align: left; }
+.shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 1.5em; }
+.shot { margin: 0; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--panel); }
+.shot img { width: 100%; display: block; cursor: zoom-in; }
+.shot figcaption { padding: 6px 10px; }
+
+.toc { position: sticky; top: 76px; align-self: start; font: 13px/1.4 var(--sans); }
+.toc h4 { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 8px 10px; }
+.toc button { display: flex; justify-content: space-between; gap: 8px; width: 100%; border: 0; background: none; text-align: left;
+  padding: 5px 10px; color: var(--muted); border-left: 2px solid var(--line); }
+.toc button:hover { color: var(--text); }
+.toc button.on { color: var(--text); border-left-color: var(--accent); font-weight: 600; }
+
+.empty { text-align: center; padding: 80px 20px; color: var(--muted); font-family: var(--sans); font-size: 14px; }
+.empty img { width: 128px; height: 128px; }
+.lb { position: fixed; inset: 0; background: rgba(0, 0, 0, .84); display: flex; align-items: center; justify-content: center;
+  z-index: 50; cursor: zoom-out; }
+.lb[hidden] { display: none; }
+.lb img { max-width: 94vw; max-height: 92vh; border-radius: 8px; box-shadow: 0 20px 60px rgba(0, 0, 0, .5); }
+
+@media (max-width: 820px) {
+  main { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  aside { max-height: 38vh; border-right: 0; border-bottom: 1px solid var(--line); }
+  .search .hint, #synced { display: none; }
+}
+@media (max-width: 560px) {
+  header h1 { display: none; }
+  header { gap: 6px; padding: 0 10px; }
+}
+@media print {
+  html, body { height: auto; display: block; background: #fff; color: #000; }
+  header, aside, .bar, .toc, .pop, .lb { display: none !important; }
+  main { display: block; }
+  #detail { overflow: visible; }
+  .page { display: block; padding: 0; font-size: 11pt; }
+  .doc, .lead, .doc h1, .doc h2 { color: #000; }
+  .ts { background: none; color: #555; padding: 0; }
+  mark { background: none; }
+  .doc h2 { break-after: avoid; }
+  li, .turn, .shot { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<header>
+  <img class="pup" id="pup" data-pet="sit_r_0" alt="">
+  <h1>Meeting notes</h1>
+  <span class="pill" id="state"><span class="dot"></span><span>…</span></span>
+  <span class="grow"></span>
+  <span class="muted small" id="synced"></span>
+  <button class="btn" id="sync" title="Fetch new meetings from Azure">Sync</button>
+  <button class="btn" id="aa" title="Reading settings" aria-haspopup="dialog">Aa</button>
+  <button class="btn" id="focus" title="Hide the meeting list (f)">Focus</button>
+  <div class="pop" id="pop" role="dialog" aria-label="Reading settings">
+    <div class="row"><span>Text size</span><span class="seg"><button data-size="-1" aria-label="Smaller text">A−</button><button id="size" disabled>17</button><button data-size="1" aria-label="Larger text">A+</button></span></div>
+    <div class="row"><span>Font</span><span class="seg"><button data-k="font" data-v="sans">Sans</button><button data-k="font" data-v="serif" style="font-family: var(--serif)">Serif</button></span></div>
+    <div class="row"><span>Line width</span><span class="seg"><button data-k="width" data-v="narrow">Narrow</button><button data-k="width" data-v="medium">Medium</button><button data-k="width" data-v="wide">Wide</button></span></div>
+    <div class="row"><span>Theme</span><span class="seg"><button data-k="theme" data-v="auto">Auto</button><button data-k="theme" data-v="light">Light</button><button data-k="theme" data-v="dark">Dark</button></span></div>
+    <hr>
+    <div class="keys"><kbd>/</kbd><span>search</span><kbd>j</kbd><span>next meeting (<kbd>k</kbd> previous)</span>
+      <kbd>1–4</kbd><span>switch tabs</span><kbd>space</kbd><span>play or pause</span>
+      <kbd>← →</kbd><span>back or forward 5 seconds</span><kbd>f</kbd><span>focus mode</span></div>
+    <div id="linkrow" hidden><hr><div class="row"><span>Azure folder</span><button class="btn" data-act="relink">Change link</button></div>
+      <div class="small muted" id="linkinfo"></div></div>
+  </div>
+</header>
+<main>
+  <aside>
+    <div class="search">
+      <input id="q" type="search" placeholder="Search notes and transcripts" autocomplete="off" aria-label="Search meetings">
+      <div class="hint muted small"><kbd>/</kbd> search · <kbd>j</kbd> <kbd>k</kbd> move · <kbd>f</kbd> focus</div>
+    </div>
+    <div id="syncerr"></div>
+    <div class="list" id="list"></div>
+  </aside>
+  <section id="detail" tabindex="-1"><div class="empty"><img data-pet="sit_r_1" alt=""><p>Pick a meeting on the left.</p></div></section>
+</main>
+<div class="lb" id="lb" hidden><img alt=""></div>
+<script>
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch { /* private mode */ } },
+};
+const READER = window.MEETCAP_READER || null;   // present when `meetcap reader` wrote this file with a link inside
+const pet = (n) => (READER && READER.pets ? READER.pets[n] || "" : `/pet/${n}.png`);
+const state = { q: "", meetings: [], processing: [], sel: null, data: null, tab: "notes", follow: true, phEls: [], now: -1, listSeq: 0 };
+
+/* ---------- formatting ---------- */
+function fmtDur(s) { s = Math.round(s || 0); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return h ? `${h} h ${m} min` : m ? `${m} min` : `${s} s`; }
+function fmtTs(s) { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+  return (h ? String(h).padStart(2, "0") + ":" : "") + String(m).padStart(2, "0") + ":" + String(x).padStart(2, "0"); }
+function day(ts) { const d = new Date(ts * 1000), t = new Date(), y = new Date(); y.setDate(t.getDate() - 1);
+  if (d.toDateString() === t.toDateString()) return "Today"; if (d.toDateString() === y.toDateString()) return "Yesterday";
+  return d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: d.getFullYear() === t.getFullYear() ? undefined : "numeric" }); }
+function longDate(ts) { return new Date(ts * 1000).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" }); }
+function shortDate(d) { return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }); }
+function clock(ts) { return new Date(ts * 1000).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }); }
+function appName(a) { a = a || ""; if (a.includes("teams")) return "Teams"; if (a.includes("zoom")) return "Zoom";
+  if (a.toLowerCase().includes("webex") || a.includes("Spark")) return "Webex"; if (a === "manual") return "Started by hand";
+  if (a === "import") return "Imported"; return a.split(".").pop() || "Meeting"; }
+function txt(x) { return typeof x === "string" ? x : (x && (x.text || x.what || x.task)) || ""; }
+function hl(text) { const s = esc(text); const terms = state.q.trim().split(/\s+/).filter((t) => t.length > 1);
+  if (!terms.length) return s; const re = new RegExp("(" + terms.map((t) => esc(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")", "gi");
+  return s.replace(re, "<mark>$1</mark>"); }
+const palette = ["#3b78d8", "#c2701c", "#2e9a68", "#a352c4", "#cf445e", "#1b92aa", "#8d7320"];
+function color(who) { let h = 0; for (const c of String(who)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return palette[h % palette.length]; }
+
+/* ---------- data sources ----------
+   The page only talks to `source`: list(q), get(id), status(), refresh(), audioUrl(d), videoUrl(d), frameUrl(d, f).
+   LocalSource is meetcap's server on 127.0.0.1. AzureSource reads your container directly with a reader link. */
+async function api(path, opts) { const r = await fetch(path, opts); const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText); return j; }
+const LocalSource = {
+  kind: "local",
+  list: (q) => api("/api/meetings?q=" + encodeURIComponent(q)),
+  get: (id) => api("/api/meetings/" + id),
+  status: () => api("/api/status"),
+  refresh: () => api("/api/sync", { method: "POST", headers: { "X-Meetcap": "1" } }),
+  audioUrl: (d) => `/api/meetings/${d.meta.id}/audio`,
+  videoUrl: (d) => (d.meta.has_video ? `/api/meetings/${d.meta.id}/video` : null),
+  frameUrl: (d, f) => `/api/meetings/${d.meta.id}/frames/${encodeURIComponent(f)}`,
+};
+
+const BLOB_HOST = /^[a-z0-9]{3,24}\.blob\.core\.(windows\.net|chinacloudapi\.cn|usgovcloudapi\.net)$/;
+function parseLink(link) {
+  let u;
+  try { u = new URL(String(link || "").trim()); } catch { throw new Error("That doesn't look like a link. It should start with https://"); }
+  if (u.protocol !== "https:" || !BLOB_HOST.test(u.hostname)) throw new Error("A reader link starts with https://<account>.blob.core.windows.net/");
+  if (!u.searchParams.get("sig")) throw new Error("The link has no signature (sig=…). Copy the whole line.");
+  const parts = u.pathname.split("/").filter(Boolean).map(decodeURIComponent);
+  if (!parts.length) throw new Error("The link needs the container name after the account address.");
+  return { link: u.href, account: u.hostname.split(".")[0], container: parts[0], prefix: parts.slice(1).join("/"),
+           base: `${u.origin}/${encodeURIComponent(parts[0])}`, sas: u.search.slice(1), expires: u.searchParams.get("se") };
+}
+function tsSeconds(ts) { if (!ts || typeof ts !== "string") return null; const n = ts.trim().split(":").map(Number);
+  return n.every(Number.isFinite) ? n.reduce((a, x) => a * 60 + x, 0) : null; }
+function toPhrases(raw) {   // Azure keeps the transcriber's phrases; the reader wants seconds
+  return ((raw && raw.phrases) || []).map((p) => p.t != null ? p : { t: Math.round((p.start_ms || 0) / 10) / 100,
+    end: Math.round(((p.start_ms || 0) + (p.duration_ms || 0)) / 10) / 100, speaker: p.speaker ?? null, text: p.text || "" });
+}
+function searchText(n) {
+  const bits = [n.title, n.summary];
+  for (const k of ["key_points", "decisions", "open_questions", "risks"]) for (const x of n[k] || []) bits.push(String(txt(x)));
+  for (const a of n.action_items || []) if (a && typeof a === "object") bits.push(String(a.owner || ""), String(a.task || ""));
+  for (const k of ["key_moments", "on_screen"]) for (const m of n[k] || []) if (m && typeof m === "object") bits.push(String(m.what || ""));
+  return bits.filter(Boolean).join(" ").toLowerCase();
+}
+function hashId(s) { let a = 0x811c9dc5, b = 0x9747b28c;
+  for (const c of s) { a = Math.imul(a ^ c.charCodeAt(0), 16777619) >>> 0; b = Math.imul(b ^ c.charCodeAt(0), 2246822519) >>> 0; }
+  return a.toString(16).padStart(8, "0") + b.toString(16).padStart(8, "0"); }
+async function pool(items, n, fn) { const out = new Array(items.length); let i = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length) { const k = i++; out[k] = await fn(items[k]); } }));
+  return out; }
+const count = (hay, w) => { let n = 0, i = hay.indexOf(w); while (i >= 0) { n++; i = hay.indexOf(w, i + w.length); } return n; };
+
+function AzureSource(cfg) {
+  const url = (name) => `${cfg.base}/${name.split("/").map(encodeURIComponent).join("/")}?${cfg.sas}`;
+  const refused = (r) => new Error(r.status === 403 ? "Azure refused the reader link: it has expired or been revoked. On the Mac that records, run: meetcap reader"
+    : r.status === 404 ? "Azure has no container at that link. Check you copied the whole link." : `Azure answered ${r.status}.`);
+  async function get(u) {
+    let r; try { r = await fetch(u); } catch {
+      throw new Error("Couldn't reach Azure. Check your internet connection. If this is a new link, run meetcap reader once so Azure lets this page read it."); }
+    if (!r.ok) throw refused(r); return r;
+  }
+  const FILE = /^(.*)\/(meta\.json|notes\.json|transcript\.json|audio\.ogg|recording\.(?:mp4|mov|mkv)|frames\/([^/]+\.jpg))$/;
+  let meetings = null, loading = null, loadedAt = null; const byId = new Map(), tx = new Map();
+  async function load() {
+    const names = []; let marker = "";
+    const pre = cfg.prefix ? cfg.prefix.replace(/\/?$/, "/") : "";
+    do {
+      const r = await get(`${cfg.base}?restype=container&comp=list&maxresults=5000&prefix=${encodeURIComponent(pre)}${marker ? "&marker=" + encodeURIComponent(marker) : ""}&${cfg.sas}`);
+      const x = new DOMParser().parseFromString(await r.text(), "application/xml");
+      x.querySelectorAll("Blob > Name").forEach((n) => names.push(n.textContent));
+      marker = (x.querySelector("NextMarker") || {}).textContent || "";
+    } while (marker);
+    const folders = new Map();
+    for (const name of names) {
+      const m = name.match(FILE); if (!m) continue;
+      const f = folders.get(m[1]) || { folder: m[1], files: new Set(), frames: [], video: null }; folders.set(m[1], f);
+      if (m[3]) f.frames.push(m[3]); else if (m[2].startsWith("recording.")) f.video = m[2]; else f.files.add(m[2]);
+    }
+    const ready = [...folders.values()].filter((f) => f.files.has("meta.json") && f.files.has("notes.json"));
+    const got = await pool(ready, 6, async (f) => {
+      try { const [meta, notes] = await Promise.all(["meta.json", "notes.json"].map(async (n) => (await get(url(`${f.folder}/${n}`))).json()));
+        return { ...f, meta, notes: notes || {} }; } catch { return null; } });   // one unreadable meeting shouldn't hide the rest
+    byId.clear();
+    meetings = got.filter(Boolean).map((e) => { e.id = /^[0-9a-f]{6,40}$/.test(e.meta.id || "") ? e.meta.id : hashId(e.folder);
+      e.search = searchText(e.notes); byId.set(e.id, e); return e; }).sort((a, b) => (b.meta.started_at || 0) - (a.meta.started_at || 0));
+    loadedAt = Date.now() / 1000;
+  }
+  const ensure = () => (meetings ? Promise.resolve() : (loading = loading || load().finally(() => { loading = null; })));
+  async function transcript(e) {
+    if (!tx.has(e.id)) {
+      let ph = [];
+      if (e.files.has("transcript.json")) { try { ph = toPhrases(await (await get(url(`${e.folder}/transcript.json`))).json()); } catch { ph = []; } }
+      tx.set(e.id, ph); e.txText = ph.map((p) => p.text).join(" ").toLowerCase();
+    }
+    return tx.get(e.id);
+  }
+  return {
+    kind: "azure", cfg,
+    async list(q) {
+      await ensure();
+      const terms = q.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      if (terms.length) await pool(meetings, 4, transcript);
+      const rows = [];
+      for (const e of meetings) {
+        let score = 0; const where = [];
+        if (terms.length) {
+          const t = e.txText || "";
+          if (!terms.every((w) => e.search.includes(w) || t.includes(w))) continue;
+          score = terms.reduce((s, w) => s + count(e.search, w) * 3 + count(t, w), 0);
+          if (terms.some((w) => e.search.includes(w))) where.push("notes");
+          if (terms.some((w) => t.includes(w))) where.push("transcript");
+        }
+        rows.push({ id: e.id, title: e.notes.title || e.meta.title || "Untitled meeting", summary: e.notes.summary || "",
+          started_at: e.meta.started_at, duration_s: e.meta.duration_s || 0, app: e.meta.app || "",
+          actions: (e.notes.action_items || []).length, moments: (e.notes.key_moments || []).length,
+          has_video: !!e.video, score, matched_in: where, status: "ready" });
+      }
+      if (terms.length) rows.sort((a, b) => b.score - a.score || (b.started_at || 0) - (a.started_at || 0));
+      return { meetings: rows, processing: [] };
+    },
+    async get(id) {
+      await ensure(); const e = byId.get(id);
+      if (!e) throw new Error("That meeting isn't in this Azure folder.");
+      return shapeMeeting({ ...e.meta, id: e.id, has_video: !!e.video }, e.notes, await transcript(e), e.frames, { _e: e });
+    },
+    status: async () => ({ azure: true, last_sync: loadedAt }),
+    async refresh() { const before = meetings ? meetings.length : 0; meetings = null; tx.clear(); await ensure(); return { added: Math.max(0, meetings.length - before) }; },
+    audioUrl: (d) => (d._e.files.has("audio.ogg") ? url(`${d._e.folder}/audio.ogg`) : null),
+    videoUrl: (d) => (d._e.video ? url(`${d._e.folder}/${d._e.video}`) : null),
+    frameUrl: (d, f) => url(`${d._e.folder}/frames/${f}`),
+  };
+}
+function shapeMeeting(meta, notes, phrases, frames, extra) {   // what every source hands the reader
+  const names = {}; for (const sp of notes.speakers || []) if (sp && sp.name) names[String(sp.label)] = sp.name;
+  const transcript = phrases.map((p) => { const label = p.speaker != null ? "S" + p.speaker : "Speaker"; return { ...p, who: names[label] || label }; });
+  const n = JSON.parse(JSON.stringify(notes || {}));
+  for (const k of ["key_moments", "on_screen", "action_items"]) for (const it of n[k] || []) if (it && typeof it === "object") it.seconds = tsSeconds(it.timestamp);
+  return { meta, notes: n, transcript, frames: [...frames].sort(), ...extra };
+}
+
+/* A meetings folder on this Mac, opened as a file: the data ships as scripts next to the meetings
+   (meetcap-index.js, and reader.js in each meeting folder), because browsers only load scripts from files. */
+function StaticSource() {
+  const rel = (path) => path.split("/").map(encodeURIComponent).join("/");
+  const loadScript = (src) => new Promise((ok, bad) => { const el = document.createElement("script"); el.src = src;
+    el.onload = () => { el.remove(); ok(); }; el.onerror = () => { el.remove(); bad(new Error("Couldn't read " + src + " next to this page.")); };
+    document.head.appendChild(el); });
+  const loaded = new Map(); let pending = null;
+  window.meetcapMeeting = (d) => { loaded.set(d.id, d); if (pending) pending(d); };
+  let index = null;
+  async function loadIndex() { await loadScript("meetcap-index.js?t=" + Date.now()); index = window.MEETCAP_INDEX || { meetings: [] }; }
+  async function meeting(row) {
+    if (!loaded.has(row.id)) await loadScript(`${rel(row.folder)}/reader.js?v=${row.v || 0}`);
+    const d = loaded.get(row.id); if (!d) throw new Error("That meeting's reader file is missing. Run: meetcap reader");
+    if (d.txText == null) d.txText = (d.transcript || []).map((p) => p.text).join(" ").toLowerCase();
+    return d;
+  }
+  const row = (id) => (index.meetings || []).find((m) => m.id === id);
+  return {
+    kind: "static",
+    async list(q) {
+      if (!index) await loadIndex();
+      const terms = q.toLowerCase().trim().split(/\s+/).filter(Boolean), rows = [];
+      if (terms.length) await pool(index.meetings, 4, (m) => meeting(m).catch(() => null));
+      for (const m of index.meetings) {
+        let score = 0; const where = [];
+        if (terms.length) {
+          const t = (loaded.get(m.id) || {}).txText || "", srch = m.search || "";
+          if (!terms.every((w) => srch.includes(w) || t.includes(w))) continue;
+          score = terms.reduce((a, w) => a + count(srch, w) * 3 + count(t, w), 0);
+          if (terms.some((w) => srch.includes(w))) where.push("notes");
+          if (terms.some((w) => t.includes(w))) where.push("transcript");
+        }
+        rows.push({ ...m, score, matched_in: where, status: "ready" });
+      }
+      if (terms.length) rows.sort((a, b) => b.score - a.score || (b.started_at || 0) - (a.started_at || 0));
+      return { meetings: rows, processing: [] };
+    },
+    async get(id) {
+      if (!index) await loadIndex(); const r = row(id);
+      if (!r) throw new Error("That meeting isn't in this folder.");
+      const d = await meeting(r);
+      return shapeMeeting({ ...d.meta, id, has_video: !!d.video }, d.notes || {}, d.transcript || [], d.frames || [], { _d: d });
+    },
+    status: async () => ({ static: true, last_sync: index ? index.built_at : null }),
+    async refresh() { const before = index ? index.meetings.length : 0; await loadIndex(); return { added: Math.max(0, index.meetings.length - before) }; },
+    audioUrl: (d) => (d._d.audio ? `${rel(d._d.folder)}/${d._d.audio}` : null),
+    videoUrl: (d) => (d._d.video ? `${rel(d._d.folder)}/${d._d.video}` : null),
+    frameUrl: (d, f) => `${rel(d._d.folder)}/frames/${encodeURIComponent(f)}`,
+  };
+}
+
+function savedLink() {   // the newer of: the link built into this file, the link pasted into this browser
+  const saved = store.get("meetcap:link", null);
+  const built = READER && READER.link ? { link: READER.link, at: READER.built_at || 0, expires: READER.expires } : null;
+  const pick = [saved, built].filter((x) => x && x.link).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+  if (!pick) return null;
+  try { return { ...parseLink(pick.link), expires: parseLink(pick.link).expires || pick.expires || null }; } catch { return null; }
+}
+const onLocalServer = !READER && /^https?:$/.test(location.protocol) && /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+let source = null;
+
+/* ---------- reading settings ---------- */
+const WIDTHS = { narrow: "60ch", medium: "70ch", wide: "88ch" };
+let themeSet = false;
+const prefs = Object.assign({ size: 17, font: "sans", width: "medium", theme: "auto", focus: false }, store.get("meetcap:reader", {}));
+function applyPrefs() {
+  const r = document.documentElement;
+  prefs.size = Math.min(24, Math.max(14, +prefs.size || 17));
+  r.style.setProperty("--fs", prefs.size + "px");
+  r.style.setProperty("--read-font", prefs.font === "serif" ? "var(--serif)" : "var(--sans)");
+  r.style.setProperty("--measure", WIDTHS[prefs.width] || WIDTHS.medium);
+  if (prefs.theme === "light" || prefs.theme === "dark") { r.dataset.theme = prefs.theme; themeSet = true; }
+  else if (themeSet) { r.removeAttribute("data-theme"); themeSet = false; }
+  document.body.classList.toggle("focus", !!prefs.focus);
+  $("#focus").classList.toggle("on", !!prefs.focus);
+  $("#size").textContent = prefs.size;
+  $$(".pop button[data-k]").forEach((b) => b.classList.toggle("on", String(prefs[b.dataset.k]) === b.dataset.v));
+  store.set("meetcap:reader", prefs);
+}
+function togglePop(open) { $("#pop").classList.toggle("open", open ?? !$("#pop").classList.contains("open")); $("#aa").classList.toggle("on", $("#pop").classList.contains("open")); }
+function renderLinkRow() {
+  const row = $("#linkrow"); row.hidden = !source || source.kind !== "azure"; if (row.hidden) return;
+  const c = source.cfg, exp = c.expires ? new Date(c.expires) : null;
+  $("#linkinfo").textContent = `${c.account} / ${c.container}${c.prefix ? " / " + c.prefix : ""}` + (exp && !isNaN(exp) ? ` · link expires ${shortDate(exp)}` : "");
+}
+
+/* ---------- first run: paste a reader link ---------- */
+function showSetup(msg) {
+  document.body.classList.add("setup"); state.data = null;
+  $("#list").innerHTML = "";
+  $("#detail").innerHTML = `<div class="setupbox"><img src="${pet("sit_r_1")}" alt="">
+    <h2>Open your meeting notes from Azure</h2>
+    <p>Paste your reader link. To get one, run <code>meetcap reader --print</code> on the Mac that records your meetings.</p>
+    <form id="setupform"><input id="link" type="url" required autocomplete="off" spellcheck="false" aria-label="Reader link"
+      placeholder="https://account.blob.core.windows.net/meetings/you?sv=…&amp;sig=…"><button class="btn primary" type="submit" id="connect">Open notes</button></form>
+    <div id="setuperr">${msg ? `<div class="err">${esc(msg)}</div>` : ""}</div>
+    <p class="muted small">This browser keeps the link, so you only paste it once. Anyone with the link can read your meetings, so keep it to yourself.</p></div>`;
+  $("#setupform").addEventListener("submit", async (e) => {
+    e.preventDefault(); const b = $("#connect"); b.disabled = true; b.textContent = "Checking…";
+    try {
+      const cfg = parseLink($("#link").value), src = AzureSource(cfg);
+      await src.list("");
+      store.set("meetcap:link", { link: cfg.link, at: Date.now() / 1000 });
+      source = src; document.body.classList.remove("setup"); start();
+    } catch (err) { $("#setuperr").innerHTML = `<div class="err">${esc(err.message)}</div>`; b.disabled = false; b.textContent = "Open notes"; }
+  });
+}
+
+/* ---------- list ---------- */
+async function loadList() {
+  const seq = ++state.listSeq;
+  if (!state.meetings.length || state.q) $("#list").innerHTML = `<div class="empty small"><span class="spin"></span> ${state.q && source.kind !== "local" ? "Searching notes and transcripts…" : "Loading…"}</div>`;
+  try {
+    const j = await source.list(state.q);
+    if (seq !== state.listSeq) return;   // a newer search already answered
+    state.meetings = j.meetings; state.processing = j.processing || []; renderList();
+  } catch (e) {
+    if (seq !== state.listSeq) return;
+    if (source.kind === "azure" && !state.meetings.length) return showSetup(e.message);
+    $("#list").innerHTML = `<div class="err">${esc(e.message)}</div>`;
+  }
+}
+function renderList() {
+  let html = "", lastDay = "";
+  if (state.processing.length) {
+    html += `<div class="day">On its way</div>`;
+    for (const p of state.processing) {
+      const failed = p.status === "failed";
+      html += `<div class="item proc"><div class="t">${failed ? "⚠︎ " : '<span class="spin"></span> '}${esc(p.title)}</div>
+        <div class="meta"><span>${clock(p.started_at)}</span><span>${esc(appName(p.app))}</span>
+        <span>${failed ? "needs attention: " + esc(p.error) : "step: " + esc((p.stage || "").replaceAll("_", " "))}</span></div></div>`;
+    }
+  }
+  if (!state.meetings.length) {
+    html += state.q ? `<div class="empty small">Nothing matches “${esc(state.q)}”.</div>`
+      : `<div class="empty small"><img src="${pet("sleep_r_0")}" alt=""><p>No meetings yet. Join a call, or double-click the puppy.</p></div>`;
+  }
+  for (const m of state.meetings) {
+    const d = day(m.started_at);
+    if (!state.q && d !== lastDay) { html += `<div class="day">${esc(d)}</div>`; lastDay = d; }
+    const txOnly = (m.matched_in || []).includes("transcript") && !(m.matched_in || []).includes("notes");
+    html += `<div class="item ${state.sel === m.id ? "sel" : ""}" data-id="${esc(m.id)}">
+      <div class="t">${hl(m.title)}</div>
+      <div class="meta"><span>${state.q ? esc(d) + " · " : ""}${clock(m.started_at)}</span><span>${fmtDur(m.duration_s)}</span><span>${esc(appName(m.app))}</span>
+      ${m.has_video ? `<span class="tag">video</span>` : ""}
+      ${m.actions ? `<span class="tag orange">${m.actions} action${m.actions > 1 ? "s" : ""}</span>` : ""}
+      ${txOnly ? `<span class="tag blue">in transcript</span>` : ""}</div>
+      <div class="sum">${hl(m.summary)}</div></div>`;
+  }
+  $("#list").innerHTML = html;
+}
+
+/* ---------- reader ---------- */
+async function select(id, t) {
+  state.sel = id;
+  $$(".item.sel").forEach((e) => e.classList.remove("sel"));
+  const it = $(`.item[data-id="${id}"]`); if (it) it.classList.add("sel");
+  try { history.replaceState(null, "", "#/m/" + id + (t != null ? "?t=" + t : "")); } catch { /* sandboxed frame */ }
+  try { state.data = await source.get(id); } catch (e) { $("#detail").innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
+  const row = state.meetings.find((m) => m.id === id);
+  if (t != null || (state.q && row && (row.matched_in || []).join() === "transcript")) state.tab = "transcript";
+  document.title = ((state.data.notes || {}).title || "Meeting") + " · Meeting notes";
+  renderDetail();
+  $("#detail").focus({ preventScroll: true });
+  if (t != null) seek(+t);
+}
+function doneKey(i) { return `meetcap:done:${state.sel}:${i}`; }
+function isDone(i) { return store.get(doneKey(i), false) === true; }
+function tsBtn(item) { if (!item || !item.timestamp) return "";
+  return item.seconds != null ? `<button class="ts" data-t="${item.seconds}" title="Play from here">${esc(item.timestamp)}</button>` : `<span class="ts">${esc(item.timestamp)}</span>`; }
+function frameSecs(f) { const p = f.replace(".jpg", "").split("-").map(Number); return p.length === 3 && p.every(Number.isFinite) ? p[0] * 3600 + p[1] * 60 + p[2] : null; }
+function frameUrl(f) { return source.frameUrl(state.data, f); }
+function nearestFrame(t) { if (t == null) return null; let best = null, gap = 61;
+  for (const f of state.data.frames) { const s = frameSecs(f); if (s != null && Math.abs(s - t) < gap) { gap = Math.abs(s - t); best = f; } } return best; }
+function tabList() {
+  const { transcript, frames } = state.data;
+  const tabs = [["notes", "Notes", ""], ["transcript", "Transcript", transcript.length || ""]];
+  if (source.videoUrl(state.data)) tabs.push(["video", "Video", ""]);
+  if (frames.length) tabs.push(["screens", "Screens", frames.length]);
+  return tabs;
+}
+
+function renderDetail() {
+  const tabs = tabList(), audio = source.audioUrl(state.data);
+  if (!tabs.some(([k]) => k === state.tab)) state.tab = "notes";
+  $("#detail").innerHTML = `
+    <div class="bar">
+      <div class="tabs" role="tablist">${tabs.map(([k, label, c]) => `<button role="tab" data-tab="${k}" class="${state.tab === k ? "on" : ""}">${label}${c !== "" ? `<span class="n">${c}</span>` : ""}</button>`).join("")}</div>
+      <span class="grow"></span>
+      ${audio ? `<audio id="audio" controls preload="none" src="${esc(audio)}"></audio>
+      <label class="small muted follow" title="Scroll the transcript along with the audio"><input type="checkbox" id="follow" ${state.follow ? "checked" : ""}> Follow</label>` : ""}
+      <button class="btn" id="copy" title="Copy the notes as Markdown">Copy</button>
+      <button class="btn" id="print" title="Print, or choose Save as PDF">Print / PDF</button>
+    </div>
+    <div class="page"><article class="doc" id="doc"></article><nav class="toc" id="toc" aria-label="On this page"></nav></div>`;
+  $("#copy").addEventListener("click", copyNotes);
+  $("#print").addEventListener("click", () => window.print());
+  const a = $("#audio");
+  if (a) {
+    $("#follow").addEventListener("change", (e) => { state.follow = e.target.checked; if (state.follow) followAlong(a.currentTime, true); });
+    a.addEventListener("timeupdate", () => followAlong(a.currentTime));
+    a.addEventListener("error", () => $(".bar").insertAdjacentHTML("beforeend", `<span class="err inline">${{ azure: "Couldn't load the audio from Azure.",
+      static: "This browser can't play the audio file. Try Chrome." }[source.kind] || "Audio unavailable. Run: meetcap doctor --deep"}</span>`), { once: true });
+  }
+  renderTab();
+}
+function showTab(k) { if (!$(`.tabs button[data-tab="${k}"]`)) return; state.tab = k;
+  $$(".tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === k)); $("#detail").scrollTop = 0; renderTab(); }
+
+function head() {
+  const { meta } = state.data; const n = state.data.notes || {};
+  const names = (n.speakers || []).map((s) => s && s.name).filter(Boolean);
+  const end = meta.ended_at ? "–" + clock(meta.ended_at) : "";
+  return `<h1>${hl(n.title || meta.title || "Untitled meeting")}</h1>
+    <div class="byline"><span>${esc(longDate(meta.started_at))}</span><span>${clock(meta.started_at)}${end}</span><span>${fmtDur(meta.duration_s)}</span>
+    <span>${esc(appName(meta.app))}</span>${names.length ? `<span>With ${esc(names.join(", "))}</span>` : ""}</div>`;
+}
+function section(id, title, count, inner) { return `<h2 id="s-${id}"><span class="h">${title}</span><span class="n">${count}</span></h2>${inner}`; }
+function timeline(items, withShots) {
+  return `<ul class="moments">${items.map((m) => { const f = withShots ? nearestFrame(m.seconds) : null;
+    return `<li><span>${tsBtn(m)}</span><div>${hl(txt(m))}${f ? `<img class="thumb" loading="lazy" src="${esc(frameUrl(f))}" alt="Screen at ${esc(m.timestamp)}">` : ""}</div></li>`; }).join("")}</ul>`;
+}
+function notesHtml() {
+  const n = state.data.notes || {}; let h = "";
+  if (n.summary) h += `<p class="lead">${hl(n.summary)}</p>`;
+  const acts = n.action_items || [];
+  if (acts.length) h += section("actions", "Action items", acts.length, `<ul class="check">${acts.map((a, i) => `
+    <li class="${isDone(i) ? "done" : ""}"><input type="checkbox" data-i="${i}" ${isDone(i) ? "checked" : ""} aria-label="Done" title="Mark done (kept in this browser)">
+      <div><span class="task"><span class="owner">${hl(a.owner || "Unassigned")}</span>: ${hl(a.task)}</span>
+      ${a.due || a.timestamp ? `<div class="meta">${a.due ? `<span class="due">Due ${esc(a.due)}</span>` : ""}${tsBtn(a)}</div>` : ""}</div></li>`).join("")}</ul>`);
+  if ((n.key_moments || []).length) h += section("moments", "Highlights", n.key_moments.length, timeline(n.key_moments));
+  for (const [k, title] of [["decisions", "Decisions"], ["key_points", "Key points"], ["open_questions", "Open questions"], ["risks", "Risks"]]) {
+    const items = (n[k] || []).map(txt).filter(Boolean);
+    if (items.length) h += section(k, title, items.length, `<ul class="bul">${items.map((x) => `<li>${hl(x)}</li>`).join("")}</ul>`);
+  }
+  if ((n.on_screen || []).length) h += section("screen", "Shown on screen", n.on_screen.length, timeline(n.on_screen, true));
+  return h || `<div class="empty"><img src="${pet("sleep_r_1")}" alt=""><p>No notes for this meeting. It may have been silent.</p></div>`;
+}
+function turns(phrases) {   // consecutive lines from one speaker read as one paragraph
+  const out = []; let cur = null;
+  for (const p of phrases) {
+    if (!p.text) continue;
+    const end = p.end || p.t;
+    if (cur && cur.who === p.who && p.t - cur.end < 20 && cur.len < 900) { cur.ph.push(p); cur.end = end; cur.len += p.text.length; }
+    else { cur = { who: p.who, t: p.t, end, len: p.text.length, ph: [p] }; out.push(cur); }
+  }
+  return out;
+}
+function transcriptHtml() {
+  const tx = state.data.transcript;
+  if (!tx.length) return `<div class="empty">No transcript for this meeting.</div>`;
+  const several = new Set(tx.map((p) => p.who)).size > 1;
+  return `<div class="tx" style="margin-top:1.6em">${turns(tx).map((u) => `<div class="turn"><div class="gut"><button class="ts" data-t="${u.t}" title="Play from here">${fmtTs(u.t)}</button></div>
+    <div>${several ? `<div class="who" style="color:${color(u.who)}">${esc(u.who)}</div>` : ""}<p>${u.ph.map((p) => `<span class="ph" data-t="${p.t}">${hl(p.text)}</span>`).join(" ")}</p></div></div>`).join("")}</div>`;
+}
+function videoHtml() {
+  const src = source.videoUrl(state.data);
+  if (!src) return `<div class="empty">No screen recording for this meeting.</div>`;
+  const n = state.data.notes || {};
+  const marks = [...(n.key_moments || []), ...(n.on_screen || [])].filter((m) => m && m.seconds != null).sort((a, b) => a.seconds - b.seconds);
+  return `<div class="vid"><video id="video" controls preload="metadata" playsinline src="${esc(src)}"></video></div>
+    <p class="muted small" id="viderr"></p>${marks.length ? section("jump", "Jump to", marks.length, timeline(marks)) : ""}`;
+}
+function screensHtml() {
+  const f = state.data.frames;
+  if (!f.length) return `<div class="empty">No screenshots for this meeting.</div>`;
+  return `<div class="shots">${f.map((x) => { const s = frameSecs(x);
+    return `<figure class="shot"><img loading="lazy" src="${esc(frameUrl(x))}" alt=""><figcaption>${s != null ? `<button class="ts" data-t="${s}">${fmtTs(s)}</button>` : esc(x)}</figcaption></figure>`; }).join("")}</div>`;
+}
+function renderTab() {
+  const doc = $("#doc"); $("#detail").dataset.tab = state.tab; state.phEls = []; state.now = -1;
+  const body = { notes: notesHtml, transcript: transcriptHtml, video: videoHtml, screens: screensHtml }[state.tab] || notesHtml;
+  doc.innerHTML = head() + body();
+  const hs = $$("h2", doc);
+  $("#toc").innerHTML = state.tab === "notes" && hs.length > 1 ? `<h4>On this page</h4>` + hs.map((h) =>
+    `<button data-go="${h.id}"><span>${esc($(".h", h).textContent)}</span><span>${esc($(".n", h).textContent)}</span></button>`).join("") : "";
+  spy();
+  const a = $("#audio");
+  if (state.tab === "transcript") {
+    state.phEls = $$(".ph", doc);
+    if (a && a.currentTime > 0) followAlong(a.currentTime, true);
+    else { const m = $("mark", doc); if (m) m.scrollIntoView({ block: "center" }); }
+  }
+  const v = $("#video");
+  if (v) {
+    v.addEventListener("error", () => { $("#viderr").textContent = "The screen recording couldn't be loaded. Check your connection, or that the reader link hasn't expired."; }, { once: true });
+    if (a && a.currentTime > 0) {   // carry on from where the audio was
+      const t = a.currentTime, playing = !a.paused; a.pause();
+      v.addEventListener("loadedmetadata", () => { v.currentTime = t; if (playing) v.play().catch(() => {}); }, { once: true });
+    }
+  }
+}
+function spy() {
+  const hs = $$("#doc h2"); if (!hs.length) return;
+  const top = $("#detail").getBoundingClientRect().top + 100; let cur = hs[0].id;
+  for (const h of hs) if (h.getBoundingClientRect().top <= top) cur = h.id;
+  $$(".toc button").forEach((b) => b.classList.toggle("on", b.dataset.go === cur));
+}
+function followAlong(t, force) {
+  const els = state.phEls; if (!els.length) return;
+  let lo = 0, hi = els.length - 1, idx = -1;
+  while (lo <= hi) { const mid = (lo + hi) >> 1; if (+els[mid].dataset.t <= t + 0.25) { idx = mid; lo = mid + 1; } else hi = mid - 1; }
+  if (idx === state.now && !force) return;
+  if (state.now >= 0 && els[state.now]) els[state.now].classList.remove("now");
+  state.now = idx; if (idx < 0) return;
+  els[idx].classList.add("now");
+  if (state.follow || force) els[idx].scrollIntoView({ block: "center", behavior: force ? "auto" : "smooth" });
+}
+function player() { return (state.tab === "video" && $("#video")) || $("#audio"); }   // timestamps drive the video on the Video tab
+function seek(t) {
+  const a = player(); if (!a || !Number.isFinite(t)) return;
+  const go = () => { a.currentTime = Math.max(0, t - 1); a.play().catch(() => {}); };
+  if (a.readyState < 1) { a.preload = "auto"; a.addEventListener("loadedmetadata", go, { once: true }); a.load(); } else go();
+}
+function copyNotes() {
+  const { meta } = state.data; const n = state.data.notes || {};
+  const L = [`# ${n.title || "Meeting"}`, `${longDate(meta.started_at)}, ${clock(meta.started_at)} · ${fmtDur(meta.duration_s)}`, ""];
+  if (n.summary) L.push("## Summary", n.summary, "");
+  if ((n.action_items || []).length) { L.push("## Action items");
+    n.action_items.forEach((a) => L.push(`- [ ] ${a.owner || "Unassigned"}: ${a.task}${a.due ? " (due " + a.due + ")" : ""}`)); L.push(""); }
+  if ((n.key_moments || []).length) { L.push("## Highlights"); n.key_moments.forEach((m) => L.push(`- ${m.timestamp || ""} ${txt(m)}`.trim())); L.push(""); }
+  for (const [k, t] of [["decisions", "Decisions"], ["key_points", "Key points"], ["open_questions", "Open questions"], ["risks", "Risks"]])
+    if ((n[k] || []).length) { L.push("## " + t); n[k].forEach((x) => L.push("- " + txt(x))); L.push(""); }
+  const b = $("#copy"), done = (msg) => { b.textContent = msg; setTimeout(() => (b.textContent = "Copy"), 1600); };
+  navigator.clipboard.writeText(L.join("\n")).then(() => done("Copied ✓"), () => done("Copy blocked"));
+}
+function openLightbox(src) { const lb = $("#lb"); $("img", lb).src = src; lb.hidden = false; }
+
+/* ---------- events ---------- */
+document.addEventListener("click", (e) => {
+  const t = e.target;
+  if (!t.closest("#pop") && !t.closest("#aa")) togglePop(false);
+  const item = t.closest(".item[data-id]"); if (item) return select(item.dataset.id);
+  const ts = t.closest("button.ts"); if (ts) { ts.blur(); return seek(+ts.dataset.t); }
+  const tab = t.closest(".tabs button"); if (tab) { tab.blur(); return showTab(tab.dataset.tab); }
+  const go = t.closest(".toc button"); if (go) return $("#" + go.dataset.go).scrollIntoView({ behavior: "smooth", block: "start" });
+  const img = t.closest("img.thumb, .shot img"); if (img) return openLightbox(img.src);
+  if (t.closest("#lb")) { $("#lb").hidden = true; return; }
+  const ph = t.closest(".ph"); if (ph && !String(getSelection())) return seek(+ph.dataset.t);
+  if (t.closest("#aa")) return togglePop();
+  if (t.closest("#focus")) { prefs.focus = !prefs.focus; return applyPrefs(); }
+  if (t.closest("[data-act=relink]")) { togglePop(false); return showSetup(); }
+  const sz = t.closest("button[data-size]"); if (sz) { prefs.size += +sz.dataset.size; return applyPrefs(); }
+  const opt = t.closest(".pop button[data-k]"); if (opt) { prefs[opt.dataset.k] = opt.dataset.v; return applyPrefs(); }
+});
+document.addEventListener("change", (e) => {
+  const c = e.target.closest("input[data-i]"); if (!c) return;
+  store.set(doneKey(+c.dataset.i), c.checked ? true : null); c.closest("li").classList.toggle("done", c.checked);
+});
+$("#detail").addEventListener("scroll", spy, { passive: true });
+$("#detail").addEventListener("wheel", () => {   // reading ahead pauses auto-scroll; tick Follow to resume
+  const a = $("#audio");
+  if (state.follow && state.tab === "transcript" && a && !a.paused) { state.follow = false; const f = $("#follow"); if (f) f.checked = false; }
+}, { passive: true });
+const idleLabel = () => (source && source.kind !== "local" ? "Refresh" : "Sync");
+$("#sync").addEventListener("click", async () => {
+  const b = $("#sync"); b.disabled = true; b.textContent = "Checking…";
+  try { const r = await source.refresh(); if (r.error) throw new Error(r.error); b.textContent = r.added ? `+${r.added} new` : "Up to date"; }
+  catch (e) { b.textContent = "Failed"; b.title = e.message; }
+  setTimeout(() => { b.textContent = idleLabel(); b.disabled = false; }, 1800); loadList(); status();
+});
+let qTimer;
+$("#q").addEventListener("input", (e) => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = e.target.value; loadList(); if (state.data) renderTab(); }, 220); });
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const el = document.activeElement;
+  const typing = /INPUT|TEXTAREA|SELECT/.test(el.tagName) && el.type !== "checkbox";
+  if (e.key === "Escape") {
+    if (!$("#lb").hidden) $("#lb").hidden = true; else if ($("#pop").classList.contains("open")) togglePop(false); else if (typing) el.blur();
+    return;
+  }
+  if (typing || document.body.classList.contains("setup")) return;
+  const a = player();
+  if (e.key === "/") { e.preventDefault(); $("#q").focus(); }
+  else if (e.key === "f") { prefs.focus = !prefs.focus; applyPrefs(); }
+  else if (/^[1-4]$/.test(e.key) && state.data) { const tab = tabList()[+e.key - 1]; if (tab) showTab(tab[0]); }
+  else if (e.key === " " && a) { e.preventDefault(); a.paused ? seek(a.currentTime + 1) : a.pause(); }
+  else if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && a && a.readyState >= 1) { e.preventDefault(); a.currentTime += e.key === "ArrowLeft" ? -5 : 5; }
+  else if (e.key === "j" || e.key === "k") {
+    const ids = state.meetings.map((m) => m.id); let i = ids.indexOf(state.sel);
+    i = e.key === "j" ? Math.min(ids.length - 1, i + 1) : Math.max(0, i - 1);
+    if (ids[i] && ids[i] !== state.sel) { select(ids[i]); const it = $(`.item[data-id="${ids[i]}"]`); if (it) it.scrollIntoView({ block: "nearest" }); }
+  }
+});
+
+/* ---------- status ---------- */
+const moodPup = { rec: "listen_r_0", work: "write_r_0", sleep: "sleep_r_0", error: "alert_r_0", idle: "sit_r_0" };
+async function status() {
+  if (!source) return;
+  try {
+    const s = await source.status(); const el = $("#state"); let mood = "idle", text = "Waiting for a meeting", title = "";
+    if (s.static) { text = "Your meetings folder"; }
+    else if (s.azure) {
+      const exp = source.cfg.expires ? new Date(source.cfg.expires) : null, days = exp && !isNaN(exp) ? (exp - Date.now()) / 864e5 : null;
+      text = days != null && days < 14 ? `Link expires ${shortDate(exp)}` : "Reading from Azure";
+      if (days != null && days < 14) { mood = "error"; title = "Run meetcap reader for a fresh link"; }
+    }
+    else if (s.recording) { mood = "rec"; text = "Recording " + fmtTs(Date.now() / 1000 - s.since); }
+    else if (s.processing) { mood = "work"; text = "Writing notes…"; }
+    else if (s.auto === false) { mood = "sleep"; text = "Auto-record off"; }
+    else if (s.last_error) { mood = "error"; text = "Needs attention"; title = s.last_error; }
+    el.className = "pill" + (s.recording ? " rec" : ""); el.lastElementChild.textContent = text; el.title = title;
+    const src = pet(moodPup[mood]); if ($("#pup").getAttribute("src") !== src) $("#pup").src = src;
+    $("#synced").textContent = s.last_sync ? (s.azure || s.static ? "updated " : "synced ") + clock(s.last_sync) : "";
+    $("#syncerr").innerHTML = s.sync_error ? `<div class="err">Azure sync: ${esc(s.sync_error)}</div>` : "";
+  } catch { $("#state").lastElementChild.textContent = "meetcap isn't running"; }
+}
+
+let timers = [];
+async function start() {
+  timers.forEach(clearInterval);
+  state.meetings = []; state.sel = null; state.data = null;
+  $("#sync").textContent = idleLabel();
+  $("#sync").title = { azure: "Check Azure for new meetings", static: "Look for new meetings in the folder" }[source.kind] || "Fetch new meetings from Azure";
+  $("#detail").innerHTML = `<div class="empty"><img src="${pet("sit_r_1")}" alt=""><p>Pick a meeting on the left.</p></div>`;
+  renderLinkRow();
+  await loadList(); status();
+  timers = source.kind !== "local"
+    ? [setInterval(status, 60000), setInterval(() => source.refresh().then(loadList).catch(() => {}), source.kind === "static" ? 60000 : 300000)]
+    : [setInterval(status, 3000), setInterval(loadList, 30000)];
+  if (document.body.classList.contains("setup")) return;
+  const m = location.hash.match(/^#\/m\/([0-9a-f]{6,40})(?:\?t=(\d+(?:\.\d+)?))?/);
+  if (m && state.meetings.some((x) => x.id === m[1])) select(m[1], m[2] != null ? +m[2] : undefined);
+  else if (state.meetings[0]) select(state.meetings[0].id);
+}
+
+(function init() {
+  $$("img[data-pet]").forEach((i) => { i.src = pet(i.dataset.pet); });
+  applyPrefs();
+  if (onLocalServer) { source = LocalSource; return start(); }
+  if (READER && READER.mode === "static") { source = StaticSource(); return start(); }
+  const cfg = savedLink();
+  if (!cfg) return showSetup();
+  source = AzureSource(cfg); start();
+})();
+</script>
+</body>
+</html>

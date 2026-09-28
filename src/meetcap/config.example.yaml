@@ -1,0 +1,109 @@
+# meetcap settings. Lives at ~/Library/Application Support/meetcap/config.yaml
+# The easy way to change these is the setup screen:  meetcap setup
+# Secrets (API keys, connection strings) never go in this file. The setup screen, or
+# `meetcap secret set <name>`, stores them in your macOS Keychain.
+
+detection:
+  enabled: true              # auto-record when a meeting app opens the mic
+  apps:                      # bundle-id prefixes; helpers like com.microsoft.teams2.helper match too
+    - com.microsoft.teams2   # new Teams
+    - com.microsoft.teams    # classic Teams
+    - us.zoom.xos            # Zoom
+    - Cisco-Systems.Spark    # Webex
+    - com.cisco.webexmeetingsapp
+  browsers: []               # add com.google.Chrome / com.microsoft.edgemac to catch Meet or Teams-in-browser.
+                             # Any site using the mic in that browser will then trigger a recording.
+  poll_seconds: 2
+  start_after_seconds: 3     # mic must be held this long before recording starts
+  stop_after_seconds: 20     # grace period after the mic is released (mute toggles, reconnects)
+  min_meeting_seconds: 90    # shorter recordings are discarded (test calls, mis-clicks)
+  max_meeting_hours: 5       # recordings roll over into a new file after this
+
+recording:
+  video: true                # false = audio only
+  fps: 10                    # 10 fps is plenty for slides and screen shares
+  max_width: 1920
+  display_index: 0           # 0 = main display
+  output_dir: ~/Movies/MeetCap   # where OBS writes while recording; moved into storage afterwards
+  keep_obs_running: false    # false: OBS opens when a meeting starts (~5-10 s) and closes after.
+                             # true: recording starts instantly, but the mic / screen-recording
+                             # indicators stay on all day and Bluetooth headsets stay in call mode.
+  obs:
+    host: 127.0.0.1
+    port: 4455
+    profile: MeetCap
+    collection: MeetCap
+    scene: MeetCap
+    app_path: /Applications/OBS.app
+
+# Where meetings are kept (recording, audio, transcript, notes, screenshots).
+storage:
+  backend: local             # local = a folder on this Mac | azure = Azure Blob Storage (see azure.storage)
+  local_path: ~/MeetCap      # tip: a folder inside OneDrive, Google Drive, Dropbox or iCloud Drive
+                             # gets backed up to that cloud with no extra setup
+
+transcription:
+  engine: local              # local        = Whisper on this Mac (free, private; Apple Silicon)
+                             # groq         = Whisper on Groq (free tier; Keychain: groq-key)
+                             # openrouter   = Whisper via OpenRouter (Keychain: openrouter-key)
+                             # openai       = OpenAI Whisper, or any OpenAI-compatible server (openai-api-key)
+                             # azure-openai = a transcription deployment in Azure OpenAI (see azure.openai)
+                             # azure-speech = Azure AI Speech, with speaker labels (see azure.speech)
+                             # none         = keep the audio only
+  model: ""                  # "" = the provider's default Whisper model
+  base_url: ""               # openai only: another OpenAI-compatible server
+  local_model: mlx-community/whisper-large-v3-turbo
+  split_speakers: auto       # record your mic and the meeting on separate tracks -> "You" vs "Others".
+                             # auto = on for local (it doubles the audio sent to cloud engines)
+
+summary:                     # who writes the notes: summary, action items, decisions, highlights
+  provider: none             # none | openrouter | groq | anthropic | openai | azure-openai | ollama
+                             # none = transcript and audio only; everything else still works
+  model: ""                  # "" = the provider's default (meetcap setup shows it)
+  base_url: ""               # openai / ollama: another OpenAI-compatible server
+  max_transcript_chars: 0    # 0 = provider default; longer meetings are summarised in parts
+  screenshots: true          # send screen frames too, when the model can read images
+
+# Only needed when you picked an Azure option above.
+azure:
+  storage:
+    account_url: ""          # https://<account>.blob.core.windows.net (auth: aad)
+    container: meetings
+    prefix: ""               # optional folder at the top of the container, e.g. your name
+    auth: key                # key = connection string in the Keychain | sas = container SAS URL | aad = az login
+  speech:
+    endpoint: ""             # https://<speech-resource>.cognitiveservices.azure.com
+    api_version: "2025-10-15"
+    locales: [en-US]         # meeting language(s); one entry also sets the language for Whisper
+    max_speakers: 8
+    profanity_filter: None   # None | Masked | Removed | Tags
+    phrase_list: []          # names and terms your meetings use a lot (helps every engine spell them)
+    auth: key
+  openai:
+    endpoint: ""             # https://<resource>.openai.azure.com
+    deployment: gpt-4.1      # chat deployment for notes (vision + JSON mode)
+    auth: key
+    transcribe_deployment: ""   # for transcription.engine = azure-openai: gpt-4o-transcribe-diarize, whisper, ...
+
+processing:
+  pause_while_recording: true    # don't process during a live call (protects call quality)
+  delete_local_after_upload: true
+  screen_insights: true          # take screenshots at scene changes for the notes and the reader
+  max_frames: 24
+  notes_dir: ""                  # optional extra copy of notes.md, e.g. an Obsidian inbox folder
+  open_notes_when_ready: false   # open that notes.md copy when it's written
+  user_name: ""                  # your first name: helps attribute your own lines and action items
+  max_attempts: 8                # per stage, exponential backoff from 30 s up to 1 h
+
+ui:
+  icon: puppy                    # puppy = animated menu bar icon; dot = tiny text symbol
+  animate: true
+  pet: false                     # true = a pet walks along the bottom of your screen
+  pet_species: puppy             # puppy kitten lion_cub fox panda bunny bear_cub tiger_cub raccoon koala
+  pet_size: 64
+  pet_hide_in_meetings: false    # true = hide it while a meeting is being recorded
+  pet_draggable: true            # drag it anywhere; double-click it to start or stop recording
+  open_notes_after_meeting: true # open the notes reader in your browser when a meeting's notes are ready
+  library: true                  # also serve the reader at http://127.0.0.1:8765 while meetcap runs
+  library_port: 8765
+  library_audio_cache_mb: 1024
